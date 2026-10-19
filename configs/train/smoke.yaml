@@ -1,0 +1,48 @@
+# Smoke test: the ttt_on recipe for 10 steps of 8 sequences, saving at the end.
+# Optimizer settings follow upstream configs/pretrain/qwen3_longct.yaml. Paths are relative to the
+# repo root and are overridden from $STUDY_ROOT by slurm/train.sbatch.
+model:
+  model_path: runs/models/Qwen3-4B-Base
+  foundation:
+    ttt_layers: [0, 6, 12, 18, 24, 30]   # every sixth layer of 36 (upstream lists a 37th that does not exist)
+    ttt_mode: true
+    ttt_proj: true
+    ttt_lr: 3
+    ttt_chunk: 4096
+
+data:
+  train_path: runs/data/corpus/train
+  train_size: 3000000000
+  dataloader_type: native
+  datasets_type: iterable
+  data_type: plaintext
+  max_seq_len: 32768
+  text_keys: content_split
+  drop_last: true
+  num_workers: 2
+
+train:
+  output_dir: runs/checkpoints/smoke
+  data_parallel_mode: fsdp2
+  global_batch_size: 8
+  micro_batch_size: 2
+  max_steps: 10
+  rmpad: false
+  rmpad_with_pos_ids: false
+  dyn_bsz: false
+  optimizer: adamw
+  lr: 5.0e-6
+  lr_warmup_ratio: 0.02
+  lr_decay_style: cosine
+  lr_decay_ratio: 0.90
+  weight_decay: 0.1
+  max_grad_norm: 1.0
+  enable_mixed_precision: true
+  enable_gradient_checkpointing: true
+  enable_full_shard: true
+  init_device: meta
+  ckpt_manager: dcp
+  save_steps: 10
+  save_hf_weights: true
+  use_wandb: false
+  seed: 1

@@ -1,0 +1,93 @@
+From 17d04d8413caee2a03dd63a135e5329f06840a62 Mon Sep 17 00:00:00 2001
+From: Rayhaan1345 <96483570+Rayhaan1345@users.noreply.github.com>
+Subject: [PATCH 2/3] Log per-step metrics to metrics.jsonl and check data
+ sharding
+
+Rank 0 appends one JSON record per optimizer step (loss, grad norm, lr, tokens, step time and
+VeOmni's throughput metrics) and the TTT parameter norms before training. At step 1 all
+data-parallel ranks compare a hash of their first micro-batch and abort if any two match.
+---
+ tasks/train_torch.py | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/tasks/train_torch.py b/tasks/train_torch.py
+index 214b47c..5e93c41 100644
+--- a/tasks/train_torch.py
++++ b/tasks/train_torch.py
+@@ -16,6 +16,8 @@ import json
+ import math
+ import os
+ import ast
++import hashlib
++import json
+ import sys
+ import time
+ from dataclasses import asdict, dataclass, field
+@@ -168,6 +170,38 @@ def _build_dataloader_compat(args, train_dataset, train_steps):
+     return build_dataloader(dataloader_type=args.data.dataloader_type, **dataloader_kwargs)
+ 
+ 
++def _log_jsonl(output_dir, record):
++    with open(os.path.join(output_dir, "metrics.jsonl"), "a") as f:
++        f.write(json.dumps(record, default=str) + "\n")
++
++
++def _check_ranks_see_different_data(micro_batch, group):
++    """Fail fast if two data-parallel ranks received the same first micro-batch."""
++    digest = hashlib.sha1(micro_batch["input_ids"].cpu().numpy().tobytes()).hexdigest()
++    digests = [None] * dist.get_world_size(group)
++    dist.all_gather_object(digests, digest, group=group)
++    if len(set(digests)) != len(digests):
++        raise RuntimeError(f"Data-parallel ranks received identical first micro-batches: {digests}")
++
++
++@torch.no_grad()
++def _log_ttt_param_stats(model, args):
++    """Record norms of the TTT parameters (expected at init: zero conv, diagonal proj)."""
++    stats = {}
++    for name, p in model.named_parameters():
++        if ".ttt_" not in name:
++            continue
++        full = (p.full_tensor() if hasattr(p, "full_tensor") else p).float()
++        if full.dim() == 2 and full.shape[0] == full.shape[1]:
++            diag = full.diagonal()
++            stats[name] = {"diag_norm": diag.norm().item(), "offdiag_norm": (full - torch.diag(diag)).norm().item()}
++        else:
++            stats[name] = {"norm": full.norm().item()}
++    if stats and args.train.global_rank == 0:
++        logger.info(f"TTT parameter stats: {json.dumps(stats)}")
++        _log_jsonl(args.train.output_dir, {"event": "ttt_params", **stats})
++
++
+ def main():
+     foundation_override = _pop_dict_cli_arg("--model.foundation")
+ 
+@@ -359,6 +393,7 @@ def main():
+     model_fwd_context, model_bwd_context = build_activation_offloading_context(
+         args.train.enable_activation_offload, args.train.enable_gradient_checkpointing, args.train.activation_gpu_limit
+     )
++    _log_ttt_param_stats(model, args)
+     model.train()
+     logger.info(
+         f"rank{args.train.local_rank} Start training, train_steps: {train_steps}, epochs: {args.train.num_train_epochs}"
+@@ -386,6 +421,7 @@ def main():
+ 
+             if global_step == 1:
+                 helper.print_example(example=micro_batches[0], rank=args.train.local_rank)
++                _check_ranks_see_different_data(micro_batches[0], get_parallel_state().fsdp_group)
+ 
+             total_loss = 0
+             synchronize()
+@@ -440,6 +476,9 @@ def main():
+                 f"loss: {total_loss:.4f}, grad_norm: {grad_norm:.4f}, lr: {lr:.2e}", refresh=False
+             )
+             data_loader_tqdm.update()
++            if args.train.global_rank == 0:
++                _log_jsonl(args.train.output_dir, {"step": global_step, "loss": total_loss, "grad_norm": grad_norm,
++                           "lr": lr, "tokens": int(length_in_batch), "step_time_s": delta_time, **train_metrics})
+ 
+             if args.train.global_rank == 0:
+                 if args.train.use_wandb:
+-- 
+2.43.0
+

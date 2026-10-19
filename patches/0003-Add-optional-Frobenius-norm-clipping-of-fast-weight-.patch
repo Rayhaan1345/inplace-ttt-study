@@ -1,0 +1,33 @@
+From d70b576c8a7f28a1f81094730524901102beea43 Mon Sep 17 00:00:00 2001
+From: Rayhaan1345 <96483570+Rayhaan1345@users.noreply.github.com>
+Subject: [PATCH 3/3] Add optional Frobenius-norm clipping of fast-weight
+ deltas at inference
+
+The paper (Appendix 9.2) rescales any per-chunk delta whose Frobenius norm exceeds a threshold
+tau (1e-5 for Qwen3-4B) before applying it; the released inference code has no such clipping.
+Setting ttt_clip in the model config enables it; the default keeps the released behaviour.
+---
+ inference_model/hf_qwen3/modeling_qwen3.py | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/inference_model/hf_qwen3/modeling_qwen3.py b/inference_model/hf_qwen3/modeling_qwen3.py
+index 222861d..b903425 100644
+--- a/inference_model/hf_qwen3/modeling_qwen3.py
++++ b/inference_model/hf_qwen3/modeling_qwen3.py
+@@ -147,6 +147,13 @@ class Qwen3MLP(nn.Module):
+                     )
+                 else:
+                     dw = contract("c h, c d -> d h", current_h, current_t) * self.ttt_lr
++                # Optional inference-time clipping (paper, Appendix 9.2): rescale a delta whose Frobenius
++                # norm exceeds `ttt_clip` to that norm. Off unless the config sets ttt_clip (as released).
++                clip = getattr(self.config, "ttt_clip", None)
++                if clip is not None:
++                    norm = dw.float().norm()
++                    if norm > clip:
++                        dw = dw * (clip / norm).to(dw.dtype)
+                 current_w = current_w + dw
+         out = rearrange(y, "b t c d -> b (t c) d")[:, :seq_len, :]
+         return out, current_w
+-- 
+2.43.0
+

@@ -1,0 +1,40 @@
+From bee9d82d79347af1d6484c856e1e9b9773cffcb6 Mon Sep 17 00:00:00 2001
+From: Rayhaan1345 <96483570+Rayhaan1345@users.noreply.github.com>
+Subject: [PATCH 1/3] Validate ttt_layers against num_hidden_layers
+
+The released Qwen3 config lists layer 36 for a 36-layer model; the membership test silently
+ignored it, so one requested TTT layer was never created. Fail loudly instead.
+---
+ hf_models/hf_qwen3/modeling_qwen3.py       | 2 ++
+ inference_model/hf_qwen3/modeling_qwen3.py | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/hf_models/hf_qwen3/modeling_qwen3.py b/hf_models/hf_qwen3/modeling_qwen3.py
+index 58ffdf5..40e6ee1 100644
+--- a/hf_models/hf_qwen3/modeling_qwen3.py
++++ b/hf_models/hf_qwen3/modeling_qwen3.py
+@@ -467,6 +467,8 @@ class Qwen3Model(Qwen3PreTrainedModel):
+         self.has_sliding_layers = "sliding_attention" in self.config.layer_types
+         self.ttt_layers = getattr(config, "ttt_layers", [])
+         self.ttt_mode = getattr(config, "ttt_mode", False)
++        if self.ttt_mode and any(not 0 <= i < config.num_hidden_layers for i in self.ttt_layers):
++            raise ValueError(f"ttt_layers {self.ttt_layers} must be within [0, {config.num_hidden_layers})")
+         self.ttt_target = getattr(config, "ttt_target", "hidden_states")
+ 
+         # Initialize weights and apply final processing
+diff --git a/inference_model/hf_qwen3/modeling_qwen3.py b/inference_model/hf_qwen3/modeling_qwen3.py
+index de12a6d..222861d 100644
+--- a/inference_model/hf_qwen3/modeling_qwen3.py
++++ b/inference_model/hf_qwen3/modeling_qwen3.py
+@@ -466,6 +466,8 @@ class Qwen3Model(Qwen3PreTrainedModel):
+         self.has_sliding_layers = "sliding_attention" in self.config.layer_types
+         self.ttt_layers = getattr(config, "ttt_layers", [])  # TTT
+         self.ttt_mode = getattr(config, "ttt_mode", False)  # TTT
++        if self.ttt_mode and any(not 0 <= i < config.num_hidden_layers for i in self.ttt_layers):
++            raise ValueError(f"ttt_layers {self.ttt_layers} must be within [0, {config.num_hidden_layers})")
+         self.ttt_target = getattr(config, "ttt_target", "hidden_states")
+ 
+         # Initialize weights and apply final processing
+-- 
+2.43.0
+

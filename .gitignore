@@ -1,0 +1,25 @@
+# run artifacts (models, data, checkpoints, logs, results) live under runs/ or $STUDY_ROOT
+runs/
+third_party/
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+# notebooks / editors
+.ipynb_checkpoints/
+.DS_Store
+# wandb / tensorboard
+wandb/
+local.env
+
+# OpenCompass scratch files if a job is ever run from the repo root
+tmp/
+paper/main.aux
+paper/main.bbl
+paper/main.blg
+paper/main.log
+paper/main.out
+paper/main.xdv
+paper/main.fls
+paper/main.fdb_latexmk

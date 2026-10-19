@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="440" viewBox="0 0 1080 440" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+<rect x="8" y="8" width="344" height="424" rx="12" fill="#f7f7f9" stroke="#d9d9e0"/>
+<rect x="364" y="8" width="344" height="424" rx="12" fill="#f7f7f9" stroke="#d9d9e0"/>
+<rect x="720" y="8" width="352" height="424" rx="12" fill="#f7f7f9" stroke="#d9d9e0"/>
+<text x="180.0" y="36" font-size="15" text-anchor="middle" fill="#222" font-weight="bold">1. Train two arms on the same data</text>
+<text x="536.0" y="36" font-size="15" text-anchor="middle" fill="#222" font-weight="bold">2. Evaluate the TTT checkpoint twice</text>
+<text x="896.0" y="36" font-size="15" text-anchor="middle" fill="#222" font-weight="bold">3. Split the gain into two effects</text>
+<rect x="105" y="56" width="150" height="36" rx="8" fill="#fff" stroke="#1f77b4" stroke-width="2"/>
+<text x="180" y="80" font-size="14" text-anchor="middle" fill="#1f77b4" font-weight="bold">Qwen3-4B-Base</text>
+<line x1="180" y1="92" x2="107.8" y2="133.5" stroke="#555" stroke-width="1.8"/><polygon points="100,138 110.0,137.4 105.6,129.6" fill="#555"/>
+<line x1="180" y1="92" x2="252.2" y2="133.5" stroke="#555" stroke-width="1.8"/><polygon points="260,138 254.4,129.6 250.0,137.4" fill="#555"/>
+<rect x="22" y="142" width="156" height="128" rx="8" fill="#eaf6ea" stroke="#2ca02c" stroke-width="2"/>
+<text x="100" y="165" font-size="14" text-anchor="middle" fill="#1b6e1b" font-weight="bold">TTT arm</text>
+<text x="100" y="186" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">In-Place TTT module on:</text>
+<text x="100" y="202" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">fast weights in the MLP</text>
+<text x="100" y="218" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">down-projection of 6 of</text>
+<text x="100" y="234" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">36 layers, updated after</text>
+<text x="100" y="250" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">each 4,096-token chunk</text>
+<text x="100" y="266" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">(eta = 3)</text>
+<rect x="182" y="142" width="156" height="128" rx="8" fill="#fff3e6" stroke="#ff7f0e" stroke-width="2"/>
+<text x="260" y="165" font-size="14" text-anchor="middle" fill="#b35900" font-weight="bold">Control arm</text>
+<text x="260" y="186" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">module off;</text>
+<text x="260" y="202" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">everything else identical</text>
+<rect x="22" y="288" width="316" height="128" rx="8" fill="#fff" stroke="#bbb" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="180" y="310" font-size="12.5" text-anchor="middle" fill="#222" font-weight="bold">Same for both arms</text>
+<text x="180" y="332" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">3.0B tokens of public text at 32k context</text>
+<text x="180" y="350" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">identical batches in identical order</text>
+<text x="180" y="368" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">released optimizer settings; two seeds</text>
+<text x="180" y="386" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">checkpoints at 1B, 2B and 3B tokens</text>
+<rect x="376" y="56" width="320" height="52" rx="8" fill="#fff" stroke="#888" stroke-width="1.5"/>
+<text x="536" y="77" font-size="13" text-anchor="middle" fill="#222" font-weight="bold">RULER: 13 tasks, 500 instances each</text>
+<text x="536" y="97" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">4k, 8k, 16k, 32k, 64k (plain RoPE and YaRN)</text>
+<rect x="376" y="130" width="320" height="60" rx="8" fill="#eaf6ea" stroke="#2ca02c" stroke-width="2"/>
+<text x="536" y="153" font-size="13.5" text-anchor="middle" fill="#1b6e1b" font-weight="bold">TTT, update on (eta = 3)</text>
+<text x="536" y="174" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">as released: fast weights adapt to the prompt</text>
+<text x="536" y="212" font-size="11" text-anchor="middle" fill="#666" font-weight="normal">same checkpoint</text>
+<rect x="376" y="224" width="320" height="60" rx="8" fill="#fdeaea" stroke="#d62728" stroke-width="2"/>
+<text x="536" y="247" font-size="13.5" text-anchor="middle" fill="#a11a1a" font-weight="bold">TTT, update off (eta = 0)</text>
+<text x="536" y="268" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">fast weights never move</text>
+<rect x="376" y="304" width="320" height="60" rx="8" fill="#fff3e6" stroke="#ff7f0e" stroke-width="2"/>
+<text x="536" y="327" font-size="13.5" text-anchor="middle" fill="#b35900" font-weight="bold">Control</text>
+<text x="536" y="348" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">continued pretraining without the module</text>
+<text x="536" y="390" font-size="10.5" text-anchor="middle" fill="#333" font-weight="normal">Also tested: eta = 1 and 6, the paper's clipping,</text>
+<text x="536" y="407" font-size="10.5" text-anchor="middle" fill="#333" font-weight="normal">chunk 512 / 1,024 / 4,096 at 1B tokens, 1B / 2B / 3B checkpoints</text>
+<text x="896" y="76" font-size="15" text-anchor="middle" fill="#222" font-weight="normal">TTT  -  Control  =</text>
+<rect x="736" y="92" width="320" height="104" rx="8" fill="#fdeaea" stroke="#d62728" stroke-width="2"/>
+<text x="896" y="116" font-size="13.5" text-anchor="middle" fill="#a11a1a" font-weight="bold">update effect</text>
+<text x="896" y="136" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">(update on)  -  (update off)</text>
+<text x="896" y="154" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">what adapting at test time adds</text>
+<text x="896" y="172" font-size="11" text-anchor="middle" fill="#a11a1a" font-weight="bold">found: -0.4 to +0.2 points up to 64k,</text>
+<text x="896" y="188" font-size="11" text-anchor="middle" fill="#a11a1a" font-weight="bold">-2.5 at 64k with YaRN</text>
+<text x="896" y="222" font-size="22" text-anchor="middle" fill="#222" font-weight="normal">+</text>
+<rect x="736" y="236" width="320" height="104" rx="8" fill="#eaf6ea" stroke="#2ca02c" stroke-width="2"/>
+<text x="896" y="260" font-size="13.5" text-anchor="middle" fill="#1b6e1b" font-weight="bold">training effect</text>
+<text x="896" y="280" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">(update off)  -  Control</text>
+<text x="896" y="298" font-size="11" text-anchor="middle" fill="#333" font-weight="normal">what training with the module changed</text>
+<text x="896" y="316" font-size="11" text-anchor="middle" fill="#1b6e1b" font-weight="bold">found: +1 to +4 points</text>
+<text x="896" y="332" font-size="11" text-anchor="middle" fill="#1b6e1b" font-weight="bold">wherever TTT beats the control</text>
+<rect x="736" y="356" width="320" height="60" rx="8" fill="#fff" stroke="#bbb" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="896" y="380" font-size="10.5" text-anchor="middle" fill="#333" font-weight="normal">paired per instance, averaged over seeds,</text>
+<text x="896" y="397" font-size="10.5" text-anchor="middle" fill="#333" font-weight="normal">95% bootstrap intervals; rule fixed before the runs</text>
+<line x1="352" y1="220" x2="355.0" y2="220.0" stroke="#555" stroke-width="1.8"/><polygon points="364,220 355.0,215.5 355.0,224.5" fill="#555"/>
+<line x1="708" y1="220" x2="711.0" y2="220.0" stroke="#555" stroke-width="1.8"/><polygon points="720,220 711.0,215.5 711.0,224.5" fill="#555"/>
+</svg>
